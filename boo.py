@@ -12,7 +12,9 @@ from selenium.common.exceptions import TimeoutException
 class ClickerApp(QWidget):
     def __init__(self):
         super().__init__()
+        self.initUI()
 
+    def initUI(self):   
         # Set initial window size
         self.resize(500, 600)
 
@@ -34,7 +36,7 @@ class ClickerApp(QWidget):
 
         # School Name input
         self.school_name_label = QLabel("School Name:")
-        self.school_name_edit = QLineEdit()
+        self.school_name_edit = QLineEdit("Данеля -1")
         layout.addWidget(self.school_name_label)
         layout.addWidget(self.school_name_edit)
         
@@ -42,8 +44,7 @@ class ClickerApp(QWidget):
         self.url_label = QLabel("Initial Website URL:")
         self.url_edit = QLineEdit()
         default_city_name = "nursultan"
-        
-        default_url = f"https://indigo-{default_city_name}.e-orda.kz/ru/cabinet/request/list"
+        default_url = f"http://localhost:8000/web/1.html"
         self.url_edit.setText(default_url)  # Set default URL here
         layout.addWidget(self.url_label)
         layout.addWidget(self.url_edit)
@@ -77,7 +78,8 @@ class ClickerApp(QWidget):
         target_time = self.time_edit.dateTime().toPyDateTime()
         city_name = self.city_name_edit.text().strip().lower()  # Get the city name from the input and format it
         # Construct the URL using the city name with the 'indigo-' prefix
-        initial_url = f"https://indigo-{city_name}.e-orda.kz/ru/cabinet/request/list"
+        #initial_url = f"https://indigo-{city_name}.e-orda.kz/ru/cabinet/request/list"
+        initial_url = "http://localhost:8000/web/1.html"
         self.url_edit.setText(initial_url)  # Set the constructed URL in the URL input field
 
         # Initialize Selenium WebDriver and open the initial URL
@@ -94,7 +96,6 @@ class ClickerApp(QWidget):
         else:
             self.start_process()
 
-
     def start_process(self):
         print("Start Process")
         school_name = self.school_name_edit.text()  # Get the school name from the input
@@ -109,14 +110,6 @@ class ClickerApp(QWidget):
                 )
                 
                 if i == 3:  # Adjusted to find and click the button below the school name
-                    # Check if the school name is in the page source
-                    if search_text not in self.driver.page_source:
-                        # School name not found
-                        print("School name not found")
-                        QMessageBox.warning(self, "Warning", "School name not found. Restarting...")
-                        self.restart_program()
-                        return
-                    
                     # Find the element that contains the school name
                     elements = self.driver.find_elements(By.XPATH, "//h2[contains(text(), '{}')]//following-sibling::a".format(search_text))
                     for element in elements:
@@ -132,34 +125,13 @@ class ClickerApp(QWidget):
                     print(f"Clicked button {i} at {self.driver.current_url}")
 
             except TimeoutException:
-                # Handle the timeout exception by showing an error dialog
-                error_dialog = QMessageBox()
-                error_dialog.setWindowTitle("Error")
-                error_dialog.setText(f"Timeout occurred waiting for button {i} to be clickable.")
-                error_dialog.setIcon(QMessageBox.Critical)
-                error_dialog.exec_()
-                break  # Break the loop if a timeout occurs
+                print(f"Timeout occurred waiting for button {i} to be clickable.")
+                break
 
             except Exception as e:
-                # Handle other exceptions
                 print(f"An error occurred on button {i}: {e}")
-                error_dialog = QMessageBox()
-                error_dialog.setWindowTitle("Error")
-                error_dialog.setText(f"An error occurred: {e}")
-                error_dialog.setIcon(QMessageBox.Critical)
-                error_dialog.exec_()
 
-    def restart_program(self):
-        """Restarts the current program, with file objects and descriptors cleanup"""
-        try:
-            # Attempt to close the Selenium browser if open
-            self.driver.quit()
-        except Exception as e:
-            print(f"Error closing the driver: {e}")
-
-        # Restart the application
-        python = sys.executable
-        os.execl(python, python, *sys.argv)
+    # Other methods go here
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
